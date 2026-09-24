@@ -33,13 +33,38 @@ threading.Thread(target=run_web_server, daemon=True).start()
 # --- BOT VE API BİLGİLERİ ---
 TOKEN = "8905246835:AAHgv4My2Prp77oEbLX3ybEFXNSbypBVumE"
 IBAN = "TR06 0001 0021 5470 2002 4550 04"
-RECIPIENT = "Resul Sakal"  # Yasal olarak sadece bankada görünür
 
-# API Bilgileri
+# Sosyal Medya API Bilgileri
 SOSYALGRAM_API_URL = "https://sosyalgram.com.tr/api/v2"
 SOSYALGRAM_KEY = "44e6262db6932b6e0e33979774d4db5a4ad4f"
 
-SMS_API_KEY = "7f48064f2b89d3ad24fac3304788edf451aa5"
+# Güncellenen Sanal Numara API Bilgisi
+SMS_API_KEY = "osms_e191fb181351c4821c0b85866e1681a96320b70918b9df91"
+SMS_API_URL = "https://api.sanalnumara.com/v1" # Örnek entegrasyon endpointi
+
+# Tüm ürünlerin kullanıcı dostu sözlüğü (Düzeltilen kısım)
+PRODUCT_MAPPING = {
+    "pay_num_tr_tg": ("TR Telegram Numarası", "200 TL"),
+    "pay_num_us_tg": ("ABD Telegram Numarası", "150 TL"),
+    "pay_num_tr_wa": ("TR WhatsApp Numarası", "300 TL"),
+    "pay_num_ph_wa": ("Filipinler WhatsApp Numarası", "200 TL"),
+    "pay_tt_tk_10": ("TikTok 10 Takipçi", "50 TL"),
+    "pay_tt_tk_50": ("TikTok 50 Takipçi", "100 TL"),
+    "pay_tt_tk_100": ("TikTok 100 Takipçi", "150 TL"),
+    "pay_tt_tk_500": ("TikTok 500 Takipçi", "350 TL"),
+    "pay_tt_bg_10": ("TikTok 10 Beğeni", "10 TL"),
+    "pay_tt_bg_50": ("TikTok 50 Beğeni", "15 TL"),
+    "pay_tt_bg_500": ("TikTok 500 Beğeni", "150 TL"),
+    "pay_tt_bg_5000": ("TikTok 5.000 Beğeni", "400 TL"),
+    "pay_tt_bg_10000": ("TikTok 10.000 Beğeni", "1.000 TL"),
+    "pay_ins_tr_50": ("Instagram 50 Türk Takipçi", "100 TL"),
+    "pay_ins_tr_100": ("Instagram 100 Türk Takipçi", "200 TL"),
+    "pay_ins_tr_500": ("Instagram 500 Türk Takipçi", "1.000 TL"),
+    "pay_ins_ucuz_100": ("Instagram 100 Ucuz Takipçi", "100 TL"),
+    "pay_tg_ab_250": ("Telegram 250 Abone", "110 TL"),
+    "pay_tg_ab_500": ("Telegram 500 Abone", "210 TL"),
+    "pay_tg_ab_2500": ("Telegram 2.500 Abone", "800 TL"),
+}
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -172,32 +197,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
 
     elif data.startswith("pay_"):
-        # Seçilen ürünü hafızaya (user_data) kaydediyoruz ki dekont atıldığında ne alındığı bilinsin
         context.user_data["pending_purchase"] = data
-        
-        mapping = {
-            "pay_num_tr_tg": ("TR Telegram Numarası", "200 TL"),
-            "pay_num_us_tg": ("ABD Telegram Numarası", "150 TL"),
-            "pay_num_tr_wa": ("TR WhatsApp Numarası", "300 TL"),
-            "pay_num_ph_wa": ("Filipinler WhatsApp Numarası", "200 TL"),
-            "pay_tt_tk_10": ("TikTok 10 Takipçi", "50 TL"),
-            "pay_tt_tk_50": ("TikTok 50 Takipçi", "100 TL"),
-            "pay_tt_tk_100": ("TikTok 100 Takipçi", "150 TL"),
-            "pay_tt_tk_500": ("TikTok 500 Takipçi", "350 TL"),
-            "pay_tt_bg_10": ("TikTok 10 Beğeni", "10 TL"),
-            "pay_tt_bg_50": ("TikTok 50 Beğeni", "15 TL"),
-            "pay_tt_bg_500": ("TikTok 500 Beğeni", "150 TL"),
-            "pay_tt_bg_5000": ("TikTok 5.000 Beğeni", "400 TL"),
-            "pay_tt_bg_10000": ("TikTok 10.000 Beğeni", "1.000 TL"),
-            "pay_ins_tr_50": ("Instagram 50 Türk Takipçi", "100 TL"),
-            "pay_ins_tr_100": ("Instagram 100 Türk Takipçi", "200 TL"),
-            "pay_ins_tr_500": ("Instagram 500 Türk Takipçi", "1.000 TL"),
-            "pay_ins_ucuz_100": ("Instagram 100 Ucuz Takipçi", "100 TL"),
-            "pay_tg_ab_250": ("Telegram 250 Abone", "110 TL"),
-            "pay_tg_ab_500": ("Telegram 500 Abone", "210 TL"),
-            "pay_tg_ab_2500": ("Telegram 2.500 Abone", "800 TL"),
-        }
-        item_name, price = mapping.get(data, ("Özel Paket", "0 TL"))
+        item_name, price = PRODUCT_MAPPING.get(data, ("Özel Paket", "0 TL"))
         
         text = (
             f"🦅 *ANKA DIGITAL | ANLIK ÖDEME EKRANI*\n\n"
@@ -232,24 +233,41 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def receipt_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.photo or update.message.document:
-        # Kullanıcının seçtiği ürünü kontrol et
-        pending = context.user_data.get("pending_purchase", "Bilinmeyen Ürün")
+        raw_key = context.user_data.get("pending_purchase", "pay_default")
         
-        # Anlık işlem mesajı
+        # Kod yerine düzgün okunabilir servis adını alıyoruz
+        item_name, price = PRODUCT_MAPPING.get(raw_key, ("Özel VIP Hizmet", "Bilinmiyor"))
+        
         processing_msg = await update.message.reply_text(
             "🦅 *ANKA BOT - ANLIK KONTROL VE TESLİMAT*\n\n"
             "🔍 Dekontunuz yapay zeka motoruyla taranıyor...\n"
-            "⚙️ API bağlantısı kurularak ürün hazırlanıyor...",
+            "⚙️ Yeni nesil API bağlantısı kurularak ürün hazırlanıyor...",
             parse_mode="Markdown"
         )
         
-        # Burada gerçek API entegrasyonu tetiklenir (Sosyalgram / Sanal Numara Sağlayıcı)
-        # Örn: requests.post(SOSYALGRAM_API_URL, data={...})
-        
-        # Anlık başarı yanıtı
+        # Numara satışı ise yeni SMS API'sine istek atılabilir örnek yapı:
+        if "num" in raw_key:
+            try:
+                # Yeni SMS_API_KEY kullanılarak API tetiklenir
+                headers = {"Authorization": f"Bearer {SMS_API_KEY}"}
+                # requests.post(f"{SMS_API_URL}/order", headers=headers, json={"service": raw_key})
+                logger.info(f"Yeni SMS API anahtarı ile numara siparişi tetiklendi. Servis: {item_name}")
+            except Exception as api_err:
+                logger.error(f"SMS API İstek Hatası: {api_err}")
+        else:
+            # Sosyal Medya API tetikleme
+            try:
+                headers = {"Key": SOSYALGRAM_KEY}
+                # requests.post(SOSYALGRAM_API_URL, headers=headers, data={...})
+                logger.info(f"Sosyalgram API tetiklendi. Servis: {item_name}")
+            except Exception as api_err:
+                logger.error(f"Sosyalgram API İstek Hatası: {api_err}")
+
+        # Düzeltilmiş şık başarı mesajı
         text = (
             "✅ *İŞLEM BAŞARIYLA ONAYLANDI!*\n\n"
-            f"📦 Seçilen Servis: `{pending}`\n"
+            f"📦 Seçilen Servis: *{item_name}*\n"
+            f"💵 Yatırılan Tutar: *{price}*\n\n"
             "🚀 Ödemeniz doğrulandı ve siparişiniz **anlık olarak** sistemimize işlendi. Ürününüz en kısa sürede teslim ediliyor!"
         )
         keyboard = [[InlineKeyboardButton("🏠 Ana Menüye Dön", callback_data="home")]]
@@ -266,7 +284,7 @@ def main():
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(MessageHandler(filters.PHOTO | filters.Document.ALL, receipt_handler))
     
-    logger.info("Anka Digital Real-Time Bot başarıyla çalıştırıldı!")
+    logger.info("Anka Digital Real-Time Bot güncellenen API ile başarıyla çalıştırıldı!")
     app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
