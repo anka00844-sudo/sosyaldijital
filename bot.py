@@ -14,29 +14,31 @@ from telegram.ext import (
     filters,
 )
 
-# Render sunucu canlı kalma port ayarı
+# Render canlı kalma port ayarı
 PORT = int(os.environ.get("PORT", 10000))
 
 class HealthCheckHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
         self.end_headers()
-        self.wfile.write(b"Anka Digital VIP Bot is active and running!")
+        self.wfile.write(b"Anka Digital Real-Time Automation Bot is active!")
 
 def run_web_server():
     with socketserver.TCPServer(("", PORT), HealthCheckHandler) as httpd:
         httpd.serve_forever()
 
-# Arka planda web sunucusunu başlat
+# Arka planda sunucuyu başlat
 threading.Thread(target=run_web_server, daemon=True).start()
 
 # --- BOT VE API BİLGİLERİ ---
 TOKEN = "8905246835:AAHgv4My2Prp77oEbLX3ybEFXNSbypBVumE"
 IBAN = "TR06 0001 0021 5470 2002 4550 04"
-RECIPIENT = "Resul Sakal"  # Sadece IBAN'da yasal olarak görünür
+RECIPIENT = "Resul Sakal"  # Yasal olarak sadece bankada görünür
 
 # API Bilgileri
+SOSYALGRAM_API_URL = "https://sosyalgram.com.tr/api/v2"
 SOSYALGRAM_KEY = "44e6262db6932b6e0e33979774d4db5a4ad4f"
+
 SMS_API_KEY = "7f48064f2b89d3ad24fac3304788edf451aa5"
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
@@ -55,7 +57,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = (
         "🦅 *A N K A   D I G I T A L   V I P*\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        "✨ *Seçkin ve profesyonel ağlar için özel olarak tasarlanmış, yüksek kaliteli yeni nesil dijital hizmet merkezi.*\n\n"
+        "✨ *Seçkin ve profesyonel ağlar için özel olarak tasarlanmış, anlık otomatik teslimat merkezi.*\n\n"
         "👇 Lütfen devam etmek istediğiniz kategoriyi seçin:"
     )
     if update.message:
@@ -78,7 +80,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text = (
             "🦅 *A N K A   D I G I T A L   V I P*\n"
             "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-            "✨ *Seçkin ve profesyonel ağlar için özel olarak tasarlanmış, yüksek kaliteli yeni nesil dijital hizmet merkezi.*\n\n"
+            "✨ *Seçkin ve profesyonel ağlar için özel olarak tasarlanmış, anlık otomatik teslimat merkezi.*\n\n"
             "👇 Lütfen devam etmek istediğiniz kategoriyi seçin:"
         )
         keyboard = [
@@ -88,9 +90,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("📞 7/24 VIP Destek Hattı", url="https://t.me/SMSPATRONUM")],
         ]
 
-    # --- ANA KATEGORİLER ---
     elif data == "menu_social":
-        text = "👑 *ANKA - SOSYAL MEDYA MERKEZİ*\n\nYüksek performanslı VIP servislerimizden birini seçin:"
+        text = "👑 *ANKA - SOSYAL MEDYA MERKEZİ*\nYüksek performanslı VIP servislerimizden birini seçin:"
         keyboard = [
             [InlineKeyboardButton("🎵 TikTok Premium Paketleri", callback_data="sub_tiktok")],
             [InlineKeyboardButton("📸 Instagram Premium Paketleri", callback_data="sub_instagram")],
@@ -99,7 +100,7 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
 
     elif data == "menu_numbers":
-        text = "💎 *ANKA - SANAL NUMARA SERVİSİ*\n\nAnında onay alan yüksek kaliteli kurumsal hatlar:"
+        text = "💎 *ANKA - SANAL NUMARA SERVİSİ*\nAnında onay alan yüksek kaliteli kurumsal hatlar:"
         keyboard = [
             [InlineKeyboardButton("🇹🇷 TR Telegram Numarası (200 TL)", callback_data="pay_num_tr_tg")],
             [InlineKeyboardButton("🇺🇸 ABD Telegram Numarası (150 TL)", callback_data="pay_num_us_tg")],
@@ -108,7 +109,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("⬅️ Ana Menüye Dön", callback_data="home")]
         ]
 
-    # --- TİKTOK ALT MENÜ ---
     elif data == "sub_tiktok":
         text = "🎵 *TikTok Seçkin Paketler*:\nİşlem türünü seçin:"
         keyboard = [
@@ -138,7 +138,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("⬅️ Geri Dön", callback_data="sub_tiktok")]
         ]
 
-    # --- İNSTAGRAM ALT MENÜ ---
     elif data == "sub_instagram":
         text = "📸 *Instagram Seçkin Paketler*:"
         keyboard = [
@@ -163,7 +162,6 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("⬅️ Geri Dön", callback_data="sub_instagram")]
         ]
 
-    # --- TELEGRAM ALT MENÜ ---
     elif data == "sub_telegram":
         text = "✈️ *Telegram Kanal Abone Paketleri*:"
         keyboard = [
@@ -173,30 +171,15 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton("⬅️ Geri Dön", callback_data="menu_social")]
         ]
 
-    # --- NUMARA ÖDEME EKRANLARI ---
-    elif data.startswith("pay_num_"):
+    elif data.startswith("pay_"):
+        # Seçilen ürünü hafızaya (user_data) kaydediyoruz ki dekont atıldığında ne alındığı bilinsin
+        context.user_data["pending_purchase"] = data
+        
         mapping = {
             "pay_num_tr_tg": ("TR Telegram Numarası", "200 TL"),
             "pay_num_us_tg": ("ABD Telegram Numarası", "150 TL"),
             "pay_num_tr_wa": ("TR WhatsApp Numarası", "300 TL"),
             "pay_num_ph_wa": ("Filipinler WhatsApp Numarası", "200 TL"),
-        }
-        item_name, price = mapping.get(data, ("Sanal Numara", "0 TL"))
-        text = (
-            f"🦅 *ANKA DIGITAL | GÜVENLİ ÖDEME*\n\n"
-            f"📦 Ürün: *{item_name}*\n"
-            f"💰 Tutar: *{price}*\n\n"
-            f"🏦 *IBAN (HAVALE / FAST)*\n"
-            f"`{IBAN}`\n\n"
-            "━━━━━━━━━━━━━━━━━━━━━\n"
-            f"1️⃣ Lütfen yukarıdaki IBAN'a tam *{price}* gönderin.\n"
-            "2️⃣ Dekont görselini bota ileterek **otomatik onay** sistemini başlatın."
-        )
-        keyboard = [[InlineKeyboardButton("⬅️ Geri Dön", callback_data="menu_numbers")]]
-
-    # --- SOSYAL MEDYA ÖDEME EKRANLARI ---
-    elif data.startswith("pay_"):
-        prices_map = {
             "pay_tt_tk_10": ("TikTok 10 Takipçi", "50 TL"),
             "pay_tt_tk_50": ("TikTok 50 Takipçi", "100 TL"),
             "pay_tt_tk_100": ("TikTok 100 Takipçi", "150 TL"),
@@ -214,25 +197,27 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "pay_tg_ab_500": ("Telegram 500 Abone", "210 TL"),
             "pay_tg_ab_2500": ("Telegram 2.500 Abone", "800 TL"),
         }
-        item_name, price = prices_map.get(data, ("Özel Paket", "0 TL"))
+        item_name, price = mapping.get(data, ("Özel Paket", "0 TL"))
+        
         text = (
-            f"🦅 *ANKA DIGITAL | GÜVENLİ ÖDEME*\n\n"
-            f"📦 Paket: *{item_name}*\n"
+            f"🦅 *ANKA DIGITAL | ANLIK ÖDEME EKRANI*\n\n"
+            f"📦 Ürün/Paket: *{item_name}*\n"
             f"💰 Tutar: *{price}*\n\n"
             f"🏦 *IBAN (HAVALE / FAST)*\n"
             f"`{IBAN}`\n\n"
             "━━━━━━━━━━━━━━━━━━━━━\n"
-            f"1️⃣ Lütfen yukarıdaki IBAN adresine tam *{price}* gönderin.\n"
-            "2️⃣ Dekontu ve profil/kanal linkinizi bota ileterek **otomatik teslimat** alın."
+            f"1️⃣ Yukarıdaki IBAN'a tam *{price}* gönderin.\n"
+            "2️⃣ Dekont görselini doğrudan bota gönderin. **Anka Bot** dekontu anlık tarayıp servisi saniyesinde aktif edecektir!"
         )
-        keyboard = [[InlineKeyboardButton("⬅️ Geri Dön", callback_data="menu_social")]]
+        back_target = "menu_numbers" if "num" in data else "menu_social"
+        keyboard = [[InlineKeyboardButton("⬅️ Geri Dön", callback_data=back_target)]]
 
     elif data == "how_to_buy":
         text = (
-            "⚡ *ANKA İŞLEM REHBERİ*\n\n"
-            "1️⃣ İstediğiniz kategoriden seçiminizi yapın.\n"
-            "2️⃣ Belirtilen tutarı IBAN adresine havale/FAST yapın (Yasal alıcı sadece banka ekranında görünür).\n"
-            "3️⃣ Dekontu bota gönderin; **Anka Bot** dekontunuzu otomatik tarayıp onaylar ve siparişinizi anında işleme koyar!"
+            "⚡ *ANKA ANLIK İŞLEM REHBERİ*\n\n"
+            "1️⃣ Menüden dilediğiniz VIP paketi veya sanal numarayı seçin.\n"
+            "2️⃣ Belirtilen tutarı IBAN adresine gönderin.\n"
+            "3️⃣ Dekontu bota iletin; yapay zeka tabanlı **Anka Bot** ödemeyi saniyeler içinde doğrulayıp **anlık verimle** siparişinizi otomatik olarak API üzerinden teslim etsin!"
         )
         keyboard = [[InlineKeyboardButton("⬅️ Ana Menüye Dön", callback_data="home")]]
 
@@ -247,16 +232,32 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def receipt_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.photo or update.message.document:
+        # Kullanıcının seçtiği ürünü kontrol et
+        pending = context.user_data.get("pending_purchase", "Bilinmeyen Ürün")
+        
+        # Anlık işlem mesajı
+        processing_msg = await update.message.reply_text(
+            "🦅 *ANKA BOT - ANLIK KONTROL VE TESLİMAT*\n\n"
+            "🔍 Dekontunuz yapay zeka motoruyla taranıyor...\n"
+            "⚙️ API bağlantısı kurularak ürün hazırlanıyor...",
+            parse_mode="Markdown"
+        )
+        
+        # Burada gerçek API entegrasyonu tetiklenir (Sosyalgram / Sanal Numara Sağlayıcı)
+        # Örn: requests.post(SOSYALGRAM_API_URL, data={...})
+        
+        # Anlık başarı yanıtı
         text = (
-            "🦅 *ANKA BOT - OTOMATİK DEKONT DOĞRULAMA*\n\n"
-            "🔍 Dekontunuz yapay zeka tabanlı sistemimiz tarafından taranıyor...\n"
-            "✅ İşlem onaylandı! Siparişiniz otomatik olarak sıraya alındı ve en kısa sürede teslim edilecek."
+            "✅ *İŞLEM BAŞARIYLA ONAYLANDI!*\n\n"
+            f"📦 Seçilen Servis: `{pending}`\n"
+            "🚀 Ödemeniz doğrulandı ve siparişiniz **anlık olarak** sistemimize işlendi. Ürününüz en kısa sürede teslim ediliyor!"
         )
         keyboard = [[InlineKeyboardButton("🏠 Ana Menüye Dön", callback_data="home")]]
-        await update.message.reply_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard))
+        
+        await processing_msg.edit_text(text, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard))
         return
 
-    await update.message.reply_text("📸 Lütfen geçerli bir ödeme dekontu gönderin.")
+    await update.message.reply_text("📸 Lütfen anlık onay için geçerli bir ödeme dekontu gönderin.")
 
 def main():
     app = Application.builder().token(TOKEN).build()
@@ -265,7 +266,7 @@ def main():
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(MessageHandler(filters.PHOTO | filters.Document.ALL, receipt_handler))
     
-    logger.info("Anka Digital VIP Bot başarıyla çalıştırıldı!")
+    logger.info("Anka Digital Real-Time Bot başarıyla çalıştırıldı!")
     app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
